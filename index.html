@@ -26,7 +26,7 @@
 <script>
   // 初始化 Authing SDK for Web
   const authing = new Authing({
-    userPoolId: '5e04ae0d5f3cee22fb37612b',
+    userPoolId: '59f86b4832eb28071bdd9214',
     host: {
       user: "http://localhost:3000/graphql",
       oauth: "http://localhost:3000/graphql"
@@ -55,6 +55,15 @@
         onSuccess: function (data) {
           const { ticket, userInfo } = data;
           console.log(`User confirmed authorization: ticket = ${ticket}`, userInfo)
+          // 获取用户信息
+          authing.exchangeUserInfoWithTicket(ticket).then(res => {
+            const { code } = res
+            if (code === 200) {
+              console.log("Exchange userInfo success: ", res)
+            } else {
+              console.log("Exchange userInfo failed: ", res)
+            }
+          })
         },
         onCancel: function () {
           console.log("User canceled authorization")
