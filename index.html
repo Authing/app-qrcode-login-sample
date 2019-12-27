@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>Authing 小程序扫码登录示例</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    #authing__retry {
+      margin-top: 12px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div id="app" style="margin: 0 auto;">
+    <img src="" alt="二维码" style="width: 200px; height: 200px; display: none;" id="qrcode">
+  </div>
+
+</body>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.12.1/jquery.min.js"></script>
+<script src="http://127.0.0.1:8082/dist/authing-js-sdk-browser.js"></script>
+<script>
+  // 初始化 Authing SDK for Web
+  const authing = new Authing({
+    userPoolId: '5e04ae0d5f3cee22fb37612b',
+    host: {
+      user: "http://localhost:3000/graphql",
+      oauth: "http://localhost:3000/graphql"
+    }
+  });
+
+  authing.geneQRCode({ scence: 'APP_AUTH' }).then(res => {
+    if (res.code === 200) {
+      const { qrcodeId, qrcodeUrl } = res.data
+      $("#qrcode").attr('src', qrcodeUrl);
+      $("#qrcode").show()
+      authing.startPollingQRCodeStatus({
+        qrcodeId,
+        scence: 'APP_AUTH',
+        interval: 1000,
+        onPollingStart: function (intervalNum) {
+          console.log("Start polling for qrcode status: ", intervalNum)
+          // clearInterval(intervalNum)
+        },
+        onResult: function (res) {
+          console.log("Got qrcode latest result: ", res)
+        },
+        onScanned: function (userInfo) {
+          console.log("User scanned qrcode: ", userInfo)
+        },
+        onSuccess: function (data) {
+          const { ticket, userInfo } = data;
+          console.log(`User confirmed authorization: ticket = ${ticket}`, userInfo)
+        },
+        onCancel: function () {
+          console.log("User canceled authorization")
+        },
+        onExpired: function () {
+          console.log("QRCode has expired.")
+        },
+        onError: function (data) {
+          console.log("Chcek qrcode status failed: ", data)
+        }
+      })
+    }
+  })
+</script>
+
+</html>
